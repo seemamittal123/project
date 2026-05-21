@@ -6,6 +6,8 @@ const productSchema = new mongoose.Schema(
         brand: { type: String, default: 'Chronos' },
         description: { type: String, default: '' },
         image: { type: String, required: true },
+        images: { type: [String], default: [] },
+        highlights: { type: [String], default: [] },
         price: { type: Number, required: true },
         mrp: { type: Number, required: true },
         rating: { type: Number, default: 4.5 },
