@@ -1,10 +1,21 @@
 {
+<<<<<<< HEAD
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+=======
+    "buildCommand": "node ./node_modules/vite/bin/vite.js build",
+    "outputDirectory": "dist",
+    "installCommand": "npm install",
+    
+>>>>>>> f68da7c939c6b89c6c6700e8d18e948c4996b78d
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f68da7c939c6b89c6c6700e8d18e948c4996b78d
