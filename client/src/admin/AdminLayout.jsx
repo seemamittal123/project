@@ -14,6 +14,7 @@ export default function AdminLayout() {
                 <p className="admin-sub">Admin Panel</p>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end>📊 Dashboard</NavLink>
+                    <NavLink to="/admin/orders">📦 Orders</NavLink>
                     <NavLink to="/admin/products">🛒 Products</NavLink>
                     <NavLink to="/admin/banners">🖼️ Banners</NavLink>
                     <NavLink to="/admin/reels">🎬 Reels</NavLink>
@@ -21,6 +22,7 @@ export default function AdminLayout() {
                     <NavLink to="/admin/promo-messages">📢 Promo Strip</NavLink>
                     <NavLink to="/admin/media-logos">🗞️ Media Logos</NavLink>
                     <NavLink to="/admin/faqs">❓ FAQs</NavLink>
+                    <NavLink to="/admin/pages">📄 Pages</NavLink>
                 </nav>
                 <div className="admin-user">
                     <div>{admin?.name}</div>

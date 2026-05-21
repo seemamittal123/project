@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import api from '../api.js';
 import downArrow from '../images/downarrow.svg';
 import upArrow from '../images/uparrow.svg';
+import { FAQSkeleton } from './Skeleton.jsx';
 
 export default function FAQ() {
     const [faqs, setFaqs] = useState([]);
     const [open, setOpen] = useState(0);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         api.get('/faqs')
             .then((r) => setFaqs(Array.isArray(r.data) ? r.data : []))
-            .catch(() => setFaqs([]));
+            .catch(() => setFaqs([]))
+            .finally(() => setLoading(false));
     }, []);
 
+    if (loading) return <FAQSkeleton />;
     if (!faqs.length) return null;
 
     return (

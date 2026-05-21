@@ -10,8 +10,8 @@ export default function ProductCard({ product }) {
                 <img src={product.image} alt={product.name} loading="lazy" />
             </Link>
             <div className="body">
-                <Link to={`/product/${product._id}`} className="brand">{product.brand || product.name}</Link>
-                <div className="model">{product.brand ? product.name : (product.description?.slice(0, 40) || '')}</div>
+                <Link to={`/product/${product._id}`} className="brand" title={product.brand || product.name}>{product.brand || product.name}</Link>
+                <div className="model" title={product.brand ? product.name : (product.description || '')}>{product.brand ? product.name : (product.description || '')}</div>
                 <div className="price-row">
                     <span className="price">₹ {Number(product.price).toLocaleString('en-IN')}</span>
                     {off > 0 && <span className="mrp">₹ {Number(product.mrp).toLocaleString('en-IN')}</span>}

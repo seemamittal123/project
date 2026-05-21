@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import api from '../api.js';
+import { MediaStripSkeleton } from './Skeleton.jsx';
 
 export default function MediaStrip() {
     const [logos, setLogos] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         api.get('/media-logos')
             .then((r) => setLogos(Array.isArray(r.data) ? r.data : []))
-            .catch(() => setLogos([]));
+            .catch(() => setLogos([]))
+            .finally(() => setLoading(false));
     }, []);
 
+    if (loading) return <MediaStripSkeleton />;
     if (!logos.length) return null;
 
     const items = [...logos, ...logos];

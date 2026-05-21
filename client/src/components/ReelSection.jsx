@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { assetUrl } from '../api.js';
+import { ReelSkeleton } from './Skeleton.jsx';
 
 export default function ReelSection() {
     const [reels, setReels] = useState([]);
     const [activeIdx, setActiveIdx] = useState(-1);
+    const [loading, setLoading] = useState(true);
     const trackRef = useRef(null);
 
     useEffect(() => {
-        api.get('/reels').then((r) => setReels(r.data || [])).catch(() => { });
+        api.get('/reels')
+            .then((r) => setReels(r.data || []))
+            .catch(() => { })
+            .finally(() => setLoading(false));
     }, []);
 
     // Auto-play thumbnails when in viewport, pause when out
@@ -29,6 +34,7 @@ export default function ReelSection() {
         return () => io.disconnect();
     }, [reels]);
 
+    if (loading) return <ReelSkeleton />;
     if (!reels.length) return null;
 
     const scrollBy = (dir) => {

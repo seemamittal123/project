@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api.js';
 import quoteIcon from '../images/quote.svg';
+import { TestimonialsSkeleton } from './Skeleton.jsx';
 
 export default function Testimonials() {
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(0);
+    const [loading, setLoading] = useState(true);
     const perPage = 2;
     const totalPages = Math.max(1, Math.ceil(items.length / perPage));
     const timer = useRef(null);
@@ -12,7 +14,8 @@ export default function Testimonials() {
     useEffect(() => {
         api.get('/testimonials')
             .then((r) => setItems(Array.isArray(r.data) ? r.data : []))
-            .catch(() => setItems([]));
+            .catch(() => setItems([]))
+            .finally(() => setLoading(false));
     }, []);
 
     const prev = () => setPage((p) => (p === 0 ? totalPages - 1 : p - 1));
@@ -26,6 +29,7 @@ export default function Testimonials() {
         return () => clearInterval(timer.current);
     }, [totalPages]);
 
+    if (loading) return <TestimonialsSkeleton />;
     if (!items.length) return null;
 
     return (

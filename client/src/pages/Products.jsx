@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
+import PageHero from '../components/PageHero.jsx';
+import { ProductsGridSkeleton } from '../components/Skeleton.jsx';
 import { fetchProducts } from '../api.js';
 
 export default function Products() {
@@ -20,32 +22,39 @@ export default function Products() {
             .finally(() => setLoading(false));
     }, [category, q]);
 
-    const heading = q
-        ? `Search results for "${q}"`
+    const titleCase = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+    const heroTitle = q
+        ? 'Search Results'
         : category
-            ? `${category} Watches`
+            ? `${titleCase(category)} Watches`
             : 'All Watches';
+    const heroCrumb = q
+        ? `Search: ${q}`
+        : category
+            ? titleCase(category)
+            : 'Shop';
 
     return (
-        <section className="section">
-            <div className="container">
-                <h2 style={{ textTransform: 'capitalize' }}>{heading}</h2>
-                <p className="subtitle">{products.length} timepieces available</p>
+        <>
+            <PageHero title={heroTitle} crumb={heroCrumb} />
+            <section className="section">
+                <div className="container">
 
-                {loading ? (
-                    <p>Loading…</p>
-                ) : products.length === 0 ? (
-                    <div className="empty">
-                        {q ? `No watches match "${q}".` : 'No products in this category yet.'}
-                    </div>
-                ) : (
-                    <div className="grid">
-                        {products.map((p) => (
-                            <ProductCard key={p._id} product={p} />
-                        ))}
-                    </div>
-                )}
-            </div>
-        </section>
+                    {loading ? (
+                        <ProductsGridSkeleton count={8} />
+                    ) : products.length === 0 ? (
+                        <div className="empty">
+                            {q ? `No watches match "${q}".` : 'No products in this category yet.'}
+                        </div>
+                    ) : (
+                        <div className="grid">
+                            {products.map((p) => (
+                                <ProductCard key={p._id} product={p} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
+        </>
     );
 }

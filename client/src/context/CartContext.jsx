@@ -5,15 +5,57 @@ const CartContext = createContext(null);
 export function CartProvider({ children }) {
     const [items, setItems] = useState(() => {
         try {
-            return JSON.parse(localStorage.getItem('cart') || '[]');
+            const raw = JSON.parse(localStorage.getItem('cart') || '[]');
+            // Strip large fields from any legacy entries to avoid quota errors.
+            return raw.map((i) => ({
+                _id: i._id,
+                name: i.name,
+                brand: i.brand,
+                price: i.price,
+                mrp: i.mrp,
+                image: i.image,
+                category: i.category,
+                qty: i.qty || 1,
+            }));
         } catch {
             return [];
         }
     });
 
+    const [withBox, setWithBox] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('cart_with_box') || 'false') === true;
+        } catch {
+            return false;
+        }
+    });
+
     useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(items));
+        try {
+            localStorage.setItem('cart', JSON.stringify(items));
+        } catch (err) {
+            // localStorage quota exceeded – fall back to in-memory only.
+            console.warn('Cart not persisted to localStorage:', err.message);
+        }
     }, [items]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('cart_with_box', JSON.stringify(withBox));
+        } catch (err) {
+            console.warn('Box option not persisted:', err.message);
+        }
+    }, [withBox]);
+
+    const slimProduct = (p) => ({
+        _id: p._id,
+        name: p.name,
+        brand: p.brand,
+        price: p.price,
+        mrp: p.mrp,
+        image: p.image,
+        category: p.category,
+    });
 
     const addToCart = (product, qty = 1) => {
         setItems((prev) => {
@@ -23,7 +65,7 @@ export function CartProvider({ children }) {
                     i._id === product._id ? { ...i, qty: i.qty + qty } : i
                 );
             }
-            return [...prev, { ...product, qty }];
+            return [...prev, { ...slimProduct(product), qty }];
         });
     };
 
@@ -37,14 +79,19 @@ export function CartProvider({ children }) {
                 .filter((i) => i.qty > 0)
         );
 
-    const clearCart = () => setItems([]);
+    const clearCart = () => {
+        setItems([]);
+        setWithBox(false);
+    };
 
     const count = items.reduce((s, i) => s + i.qty, 0);
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const BOX_FEE = 500;
+    const boxFee = withBox ? BOX_FEE * count : 0;
 
     return (
         <CartContext.Provider
-            value={{ items, addToCart, removeFromCart, updateQty, clearCart, count, subtotal }}
+            value={{ items, addToCart, removeFromCart, updateQty, clearCart, count, subtotal, withBox, setWithBox, boxFee, BOX_FEE }}
         >
             {children}
         </CartContext.Provider>

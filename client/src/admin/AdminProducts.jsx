@@ -3,7 +3,7 @@ import api from '../api.js';
 import Loader from './Loader.jsx';
 
 const empty = {
-    name: '', brand: 'GenZdial', description: '', image: '',
+    name: '', brand: 'GenZdial', description: '', image: '', images: [], highlights: [],
     price: 0, mrp: 0, rating: 4.5, reviews: 0,
     category: 'unisex', tag: '', stock: 25,
     trending: false, newArrival: false,
@@ -26,7 +26,7 @@ export default function AdminProducts() {
     useEffect(() => { load(); }, []);
 
     const startNew = () => { setEditing('new'); setForm(empty); };
-    const startEdit = (p) => { setEditing(p._id); setForm({ ...empty, ...p }); };
+    const startEdit = (p) => { setEditing(p._id); setForm({ ...empty, ...p, images: Array.isArray(p.images) ? p.images : [], highlights: Array.isArray(p.highlights) ? p.highlights : [] }); };
     const cancel = () => { setEditing(null); setForm(empty); };
 
     const save = async (e) => {
@@ -58,6 +58,29 @@ export default function AdminProducts() {
         const reader = new FileReader();
         reader.onload = () => onChange('image', reader.result);
         reader.readAsDataURL(file);
+    };
+
+    const addGalleryImages = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        Promise.all(files.map((file) => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        }))).then((results) => {
+            setForm((f) => ({ ...f, images: [...(f.images || []), ...results] }));
+        });
+        e.target.value = '';
+    };
+
+    const addGalleryUrl = (url) => {
+        const u = (url || '').trim();
+        if (!u) return;
+        setForm((f) => ({ ...f, images: [...(f.images || []), u] }));
+    };
+
+    const removeGalleryImage = (idx) => {
+        setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
     };
 
     return (
@@ -119,6 +142,42 @@ export default function AdminProducts() {
                             <input value={form.image} onChange={(e) => onChange('image', e.target.value)} placeholder="https://…" />
                             <input type="file" accept="image/*" onChange={onImage} style={{ marginTop: 8 }} />
                             {form.image && <img src={form.image} alt="preview" className="img-preview" />}
+                        </div>
+                        <div className="span-2">
+                            <label>Gallery images (shown on product detail page)</label>
+                            <input
+                                placeholder="Paste image URL and press Enter"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addGalleryUrl(e.currentTarget.value);
+                                        e.currentTarget.value = '';
+                                    }
+                                }}
+                            />
+                            <input type="file" accept="image/*" multiple onChange={addGalleryImages} style={{ marginTop: 8 }} />
+                            {form.images && form.images.length > 0 && (
+                                <div className="gallery-previews">
+                                    {form.images.map((src, i) => (
+                                        <div className="gallery-thumb" key={i}>
+                                            <img src={src} alt={`gallery ${i + 1}`} />
+                                            <button type="button" onClick={() => removeGalleryImage(i)} aria-label="Remove">×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="span-2">
+                            <label>Highlights / bullet points (one per line)</label>
+                            <textarea
+                                rows="4"
+                                placeholder={'2-year international warranty\nFree shipping on prepaid orders\n30-day easy returns\n100% authentic, brand-sealed'}
+                                value={(form.highlights || []).join('\n')}
+                                onChange={(e) => onChange(
+                                    'highlights',
+                                    e.target.value.split('\n').map((s) => s.trimEnd()).filter((s) => s.trim() !== '')
+                                )}
+                            />
                         </div>
                         <label className="check"><input type="checkbox" checked={form.trending} onChange={(e) => onChange('trending', e.target.checked)} /> Trending</label>
                         <label className="check"><input type="checkbox" checked={form.newArrival} onChange={(e) => onChange('newArrival', e.target.checked)} /> New arrival</label>

@@ -5,7 +5,7 @@ import axios from 'axios';
 // - In prod build: VITE_API_URL must be set on Vercel (otherwise we use a same-origin /api,
 //   which works if the backend is behind the same domain via rewrites).
 const ENV_URL = import.meta.env.VITE_API_URL;
-const DEFAULT_DEV_URL = 'https://project-bpwe.onrender.com/api';
+const DEFAULT_DEV_URL = 'http://localhost:5000/api';
 const DEFAULT_PROD_URL = '/api'; // same-origin fallback for production
 
 const API_BASE = (

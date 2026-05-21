@@ -1,19 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
+import { useUserAuth } from '../context/UserAuthContext.jsx';
 import logo from '../images/logo.png';
 import cartIcon from '../images/cart.svg';
 import loginIcon from '../images/login.svg';
 
 export default function Navbar() {
     const { count } = useCart();
+    const { user, openLogin, openSignup, logout } = useUserAuth();
     const [open, setOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [accountOpen, setAccountOpen] = useState(false);
     const [query, setQuery] = useState('');
     const { pathname } = useLocation();
     const navigate = useNavigate();
+    const accountRef = useRef(null);
 
-    useEffect(() => { setOpen(false); setSearchOpen(false); }, [pathname]);
+    useEffect(() => { setOpen(false); setSearchOpen(false); setAccountOpen(false); }, [pathname]);
+
+    useEffect(() => {
+        if (!accountOpen) return;
+        const onClick = (e) => {
+            if (!accountRef.current?.contains(e.target)) setAccountOpen(false);
+        };
+        document.addEventListener('mousedown', onClick);
+        return () => document.removeEventListener('mousedown', onClick);
+    }, [accountOpen]);
 
     const submitSearch = (e) => {
         e.preventDefault();
@@ -48,7 +61,7 @@ export default function Navbar() {
                     <NavLink to="/" end>Home</NavLink>
                     <NavLink to="/shop/men">Men</NavLink>
                     <NavLink to="/shop/women">Women</NavLink>
-                    <NavLink to="/shop">Trending</NavLink>
+                    <NavLink to="/shop" end>Trending</NavLink>
                     <NavLink to="/shop/luxury">Gifting</NavLink>
                 </nav>
 
@@ -81,9 +94,44 @@ export default function Navbar() {
                         <img src={cartIcon} alt="Cart" className="icon-img" />
                         {count > 0 && <span className="badge">{count}</span>}
                     </Link>
-                    <button className="icon-btn" title="Account">
-                        <img src={loginIcon} alt="Account" className="icon-img" />
-                    </button>
+                    <div className="account-wrap" ref={accountRef}>
+                        <button
+                            className="icon-btn account-btn"
+                            title={user ? `${user.name || 'Account'} (${user.email})` : 'Login / Signup'}
+                            onClick={() => setAccountOpen((v) => !v)}
+                            type="button"
+                        >
+                            {user ? (
+                                <span className="account-avatar" aria-hidden="true">
+                                    {(user.name || user.email || '?').trim().charAt(0).toUpperCase()}
+                                </span>
+                            ) : (
+                                <img src={loginIcon} alt="Account" className="icon-img" />
+                            )}
+                        </button>
+                        {user && accountOpen && (
+                            <div className="account-menu" onClick={(e) => e.stopPropagation()}>
+                                {user.name && <div className="account-name">{user.name}</div>}
+                                <div className="account-phone">{user.email}</div>
+                                <Link to="/orders" onClick={() => setAccountOpen(false)} className="account-link">
+                                    My Orders
+                                </Link>
+                                <button type="button" onClick={() => { setAccountOpen(false); logout(); navigate('/'); }}>
+                                    Logout
+                                </button>
+                            </div>
+                        )}
+                        {!user && accountOpen && (
+                            <div className="account-menu" onClick={(e) => e.stopPropagation()}>
+                                <button type="button" onClick={() => { setAccountOpen(false); openLogin(); }}>
+                                    Login
+                                </button>
+                                <button type="button" className="account-signup" onClick={() => { setAccountOpen(false); openSignup(); }}>
+                                    Sign Up
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
