@@ -41,7 +41,7 @@ export default function AdminOrders() {
                             </div>
                             <div>
                                 <div className="aoc-name">{o.userName || '—'}</div>
-                                <div className="aoc-meta">{o.userEmail}</div>
+                                <div className="aoc-meta">{o.userPhone || '—'}</div>
                             </div>
                             <div>
                                 <div className="aoc-meta">{o.items?.length || 0} item(s)</div>
@@ -80,8 +80,7 @@ export default function AdminOrders() {
                                         <p style={{ margin: 0 }}>
                                             Subtotal: ₹{o.subtotal}<br />
                                             Shipping: {o.shipping === 0 ? 'FREE' : `₹${o.shipping}`}<br />
-                                            <strong>Total: ₹{o.total}</strong><br />
-                                            UPI Ref: {o.paymentRef || '—'}
+                                            <strong>Total: ₹{o.total}</strong>
                                         </p>
                                     </div>
                                 </div>

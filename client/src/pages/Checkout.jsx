@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api.js';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import api, { assetUrl } from '../api.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useUserAuth } from '../context/UserAuthContext.jsx';
 
 export default function Checkout() {
-    const { items, subtotal, clearCart, withBox, boxFee } = useCart();
+    const cart = useCart();
     const { user } = useUserAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Buy-now: a single product passed via route state bypasses the cart.
+    const buyNow = location.state?.buyNow || null;
+    const items = buyNow ? [buyNow] : cart.items;
+    const subtotal = buyNow ? buyNow.price * buyNow.qty : cart.subtotal;
+    const withBox = buyNow ? false : cart.withBox;
+    const boxFee = buyNow ? 0 : cart.boxFee;
+    const coupon = buyNow ? null : cart.coupon;
+    const discount = buyNow ? 0 : cart.discount;
 
     const shipping = subtotal > 1500 || subtotal === 0 ? 0 : 99;
-    const total = subtotal + shipping + boxFee;
+    const total = Math.max(0, subtotal + shipping + boxFee - discount);
 
     const [step, setStep] = useState('address'); // 'address' | 'pay' | 'done'
     const [address, setAddress] = useState({
@@ -23,27 +33,20 @@ export default function Checkout() {
         pincode: '',
         country: 'India',
     });
-    const [paymentRef, setPaymentRef] = useState('');
     const [placing, setPlacing] = useState(false);
     const [error, setError] = useState('');
     const [order, setOrder] = useState(null);
+    const [paymentQr, setPaymentQr] = useState('');
+
+    useEffect(() => {
+        api.get('/settings/payment')
+            .then((r) => setPaymentQr(r.data?.paymentQr || ''))
+            .catch(() => { });
+    }, []);
 
     useEffect(() => {
         if (items.length === 0 && step !== 'done') navigate('/cart');
     }, [items, step, navigate]);
-
-    const upi = useMemo(() => {
-        const payee = 'manishgupta21feb@oksbi'; // demo UPI VPA
-        const name = encodeURIComponent('Genzdial');
-        const note = encodeURIComponent(`Order from ${user?.name || 'customer'}`);
-        const amt = total.toFixed(2);
-        return `upi://pay?pa=${payee}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
-    }, [total, user]);
-
-    const qrUrl = useMemo(() => {
-        const data = encodeURIComponent(upi);
-        return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${data}`;
-    }, [upi]);
 
     const submitAddress = (e) => {
         e.preventDefault();
@@ -71,11 +74,12 @@ export default function Checkout() {
         setError('');
         try {
             const { data } = await api.post('/orders', {
-                items, address, subtotal, shipping, total, paymentRef, withBox, boxFee,
+                items, address, subtotal, shipping, total, withBox, boxFee,
+                couponCode: coupon?.code || '',
             });
             setOrder(data);
             setStep('done');
-            clearCart();
+            if (!buyNow) cart.clearCart();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to place order');
         } finally {
@@ -126,15 +130,17 @@ export default function Checkout() {
                     {step === 'pay' && (
                         <div className="pay-step">
                             <h3>Scan to Pay</h3>
-                            <p style={{ color: 'var(--muted)' }}>Use any UPI app (GPay, PhonePe, Paytm) to scan & pay ₹{total}.</p>
+                            <p style={{ color: 'var(--muted)', marginTop: '0px', fontSize: '12px' }}>Use any UPI app (GPay, PhonePe, Paytm) to scan & pay ₹{total}.</p>
                             <div className="qr-box">
-                                <img src={qrUrl} alt="UPI QR" width={240} height={240} />
+                                {paymentQr ? (
+                                    <img src={assetUrl(paymentQr)} alt="Payment QR" width={240} height={240} style={{ objectFit: 'contain' }} />
+                                ) : (
+                                    <div style={{ width: 240, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: 16 }}>
+                                        Payment QR not configured yet. Please contact support.
+                                    </div>
+                                )}
                                 <div className="qr-amount">₹{total}</div>
                             </div>
-                            <label className="pay-ref">
-                                <span>UPI / Transaction Reference (optional)</span>
-                                <input value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} placeholder="e.g. 4321XXXXXXXX" />
-                            </label>
                             {error && <div className="login-error">{error}</div>}
                             <div className="pay-actions">
                                 <button className="btn-secondary" onClick={() => setStep('address')}>← Back</button>
@@ -173,6 +179,12 @@ export default function Checkout() {
                     <div className="row"><span>Shipping</span><span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span></div>
                     {withBox && (
                         <div className="row"><span>Original box</span><span>₹{boxFee}</span></div>
+                    )}
+                    {discount > 0 && (
+                        <div className="row">
+                            <span>Discount{coupon ? ` (${coupon.code})` : ''}</span>
+                            <span>− ₹{discount}</span>
+                        </div>
                     )}
                     <div className="row total"><span>Total</span><span>₹{total}</span></div>
                 </aside>

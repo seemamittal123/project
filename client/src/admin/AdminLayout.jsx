@@ -22,6 +22,8 @@ export default function AdminLayout() {
                     <NavLink to="/admin/promo-messages">📢 Promo Strip</NavLink>
                     <NavLink to="/admin/media-logos">🗞️ Media Logos</NavLink>
                     <NavLink to="/admin/faqs">❓ FAQs</NavLink>
+                    <NavLink to="/admin/coupons">🏷️ Coupons</NavLink>
+                    <NavLink to="/admin/settings">⚙️ Payment</NavLink>
                     <NavLink to="/admin/pages">📄 Pages</NavLink>
                 </nav>
                 <div className="admin-user">

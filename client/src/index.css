@@ -443,9 +443,9 @@ button {
 }
 
 .section h2 {
-    font-size: 28px;
+    font-size: 25px;
     margin: 0;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .section .subtitle {
@@ -995,11 +995,66 @@ button {
 }
 
 .summary .row.total {
-    font-weight: 800;
+    font-weight: 600;
     font-size: 18px;
     border-top: 1px solid var(--line);
     padding-top: 12px;
     margin-top: 14px;
+}
+
+.coupon-box {
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.coupon-form {
+    display: flex;
+    gap: 8px;
+}
+
+.coupon-form input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.coupon-form button {
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.coupon-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.coupon-applied {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.coupon-applied .link-remove {
+    background: none;
+    border: 0;
+    color: var(--brand);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
 }
 
 .empty {
@@ -1160,7 +1215,7 @@ button {
 .bestsellers {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 40px 24px 16px;
+    padding: 40px 25px 16px;
 }
 
 .bs-head h2 {
@@ -2348,6 +2403,19 @@ img.testi-quote {
     .section {
         padding: 32px 0;
     }
+
+    .faq-wrap {
+        padding: 0;
+    }
+
+    .img.testi-quote {
+        width: 35px;
+    }
+
+    .testi-meta {
+        margin: 15px 0 18px;
+    }
+
 }
 
 /* Reduce hero offsets, keep image natural */
@@ -2594,8 +2662,8 @@ img.testi-quote {
 .pd-title {
     margin: 0 0 10px;
     font-size: 22px;
-    line-height: 1.25;
-    font-weight: 600;
+    line-height: 1.4;
+    font-weight: 500;
 }
 
 .pd-rating {
@@ -2623,6 +2691,51 @@ img.testi-quote {
     font-size: 15px;
 }
 
+.pd-color-variants {
+    margin: 0 0 18px;
+}
+
+.pd-color-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.pd-color-label strong {
+    color: var(--fg);
+    font-weight: 600;
+}
+
+.pd-color-swatches {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pd-color-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+    transition: outline 0.18s, border-color 0.18s, transform 0.15s;
+    padding: 0;
+}
+
+.pd-color-swatch:hover {
+    transform: scale(1.12);
+    outline-color: rgba(0, 0, 0, 0.25);
+}
+
+.pd-color-swatch.active {
+    outline-color: var(--purple, #7c3aed);
+    border-color: #fff;
+    transform: scale(1.12);
+}
+
 .off-tag {
     color: #ef4444;
     font-size: 16px;
@@ -2635,6 +2748,31 @@ img.testi-quote {
     gap: 14px;
     align-items: center;
     margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.pd-add-btn,
+.pd-buy-btn {
+    flex: 1 1 200px;
+}
+
+.btn-buy-now {
+    display: inline-block;
+    background: #111;
+    color: #fff;
+    font-weight: 700;
+    padding: 12px 22px;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-buy-now:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
 }
 
 .pd-bullets {
@@ -3429,7 +3567,9 @@ img.testi-quote {
 
 .sum-name {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
+    line-height: 18px;
+    margin-bottom: 5px;
 }
 
 .sum-qty {
@@ -3939,4 +4079,50 @@ img.testi-quote {
     font-size: 12px;
     color: #6d28d9;
     margin: 0 2px;
+}
+
+/* ===== Responsive section padding + testimonial slider tweaks ===== */
+@media (max-width: 768px) {
+
+    /* 15px side padding for every section EXCEPT hero/banner, mid promo-banner, and footer */
+    .bestsellers,
+    .reel-section,
+    .testimonials,
+    .faq-section,
+    .concerns,
+    .section {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+
+    /* Hide discount % badge on mobile product cards */
+    .card .off {
+        display: none !important;
+    }
+
+    /* Testimonial slider: full-width card, arrows overlap card edges */
+    .testi-wrap {
+        gap: 0 !important;
+    }
+
+    .testi-viewport {
+        width: 100%;
+    }
+
+    .testi-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 6;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .testi-arrow.left {
+        left: -4px;
+    }
+
+    .testi-arrow.right {
+        right: -4px;
+    }
 }

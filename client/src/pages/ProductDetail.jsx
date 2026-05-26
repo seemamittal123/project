@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { fetchProduct, fetchProducts } from '../api.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useUserAuth } from '../context/UserAuthContext.jsx';
@@ -14,6 +15,7 @@ export default function ProductDetail() {
     const [product, setProduct] = useState(null);
     const [activeIdx, setActiveIdx] = useState(0);
     const [zoom, setZoom] = useState({ show: false, x: 0, y: 0 });
+    const [selectedVariantIdx, setSelectedVariantIdx] = useState(null);
     const [related, setRelated] = useState([]);
     const stageRef = useRef(null);
     const relatedRef = useRef(null);
@@ -21,6 +23,7 @@ export default function ProductDetail() {
 
     useEffect(() => {
         setActiveIdx(0);
+        setSelectedVariantIdx(null);
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         fetchProduct(id).then(setProduct).catch(() => setProduct(null));
     }, [id]);
@@ -138,7 +141,8 @@ export default function ProductDetail() {
         );
     }
 
-    const activeImage = gallery[activeIdx] || product.image;
+    const selectedVariant = selectedVariantIdx !== null ? product.colorVariants?.[selectedVariantIdx] : null;
+    const activeImage = selectedVariant ? selectedVariant.image : (gallery[activeIdx] || product.image);
     const off = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
     const onMouseMove = (e) => {
@@ -162,9 +166,9 @@ export default function ProductDetail() {
                             <button
                                 key={i}
                                 type="button"
-                                className={`pd-thumb ${i === activeIdx ? 'active' : ''}`}
-                                onClick={() => setActiveIdx(i)}
-                                onMouseEnter={() => setActiveIdx(i)}
+                                className={`pd-thumb ${selectedVariantIdx === null && i === activeIdx ? 'active' : ''}`}
+                                onClick={() => { setSelectedVariantIdx(null); setActiveIdx(i); }}
+                                onMouseEnter={() => { setSelectedVariantIdx(null); setActiveIdx(i); }}
                                 aria-label={`View image ${i + 1}`}
                             >
                                 <img src={src} alt={`${product.name} ${i + 1}`} />
@@ -223,11 +227,53 @@ export default function ProductDetail() {
 
                     <p className="pd-desc">{product.description}</p>
 
+                    {Array.isArray(product.colorVariants) && product.colorVariants.length > 0 && (
+                        <div className="pd-color-variants">
+                            <p className="pd-color-label">Color: <strong>{selectedVariant?.name || 'Default'}</strong></p>
+                            <div className="pd-color-swatches">
+                                {product.colorVariants.map((v, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        className={`pd-color-swatch ${selectedVariantIdx === i ? 'active' : ''}`}
+                                        style={{ backgroundColor: v.colorCode || '#ccc' }}
+                                        title={v.name || `Color ${i + 1}`}
+                                        onClick={() => setSelectedVariantIdx(selectedVariantIdx === i ? null : i)}
+                                        aria-label={v.name || `Color ${i + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="pd-actions">
                         <button className="btn-primary pd-add-btn" onClick={() => {
-                            requireAuth(() => { addToCart(product, 1); navigate('/cart'); });
+                            requireAuth(() => {
+                                addToCart({ ...product, image: activeImage }, 1);
+                                toast.success(`${product.name} added to cart`);
+                            });
                         }}>
                             Add to Cart →
+                        </button>
+                        <button className="btn-buy-now pd-buy-btn" onClick={() => {
+                            requireAuth(() => {
+                                navigate('/checkout', {
+                                    state: {
+                                        buyNow: {
+                                            _id: product._id,
+                                            name: product.name,
+                                            brand: product.brand,
+                                            price: product.price,
+                                            mrp: product.mrp,
+                                            image: activeImage,
+                                            category: product.category,
+                                            qty: 1,
+                                        },
+                                    },
+                                });
+                            });
+                        }}>
+                            Buy it Now
                         </button>
                     </div>
 

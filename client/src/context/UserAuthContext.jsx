@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import api from '../api.js';
 
 const UserAuthContext = createContext(null);
@@ -13,28 +13,36 @@ export function UserAuthProvider({ children }) {
     const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
     const [loginOpen, setLoginOpen] = useState(false);
     const [signupOpen, setSignupOpen] = useState(false);
+    const pendingActionRef = useRef(null);
 
     useEffect(() => {
         if (token) api.defaults.headers.common.UserAuthorization = `Bearer ${token}`;
         else delete api.defaults.headers.common.UserAuthorization;
     }, [token]);
 
-    const sendOtp = useCallback((email, mode = 'login') =>
-        api.post('/auth/send-otp', { email, mode }).then((r) => r.data), []);
+    const sendOtp = useCallback((phone, mode = 'login') =>
+        api.post('/auth/send-otp', { phone, mode }).then((r) => r.data), []);
 
-    const verifyOtp = useCallback((email, otp, opts = {}) =>
+    const verifyOtp = useCallback((phone, otp, opts = {}) =>
         api.post('/auth/verify-otp', {
-            email,
+            phone,
             otp,
             mode: opts.mode || 'login',
             name: opts.name,
-            phone: opts.phone,
         }).then((r) => {
             const { token: t, user: u } = r.data;
             localStorage.setItem(TOKEN_KEY, t);
             localStorage.setItem(USER_KEY, JSON.stringify(u));
             setToken(t);
             setUser(u);
+            setLoginOpen(false);
+            setSignupOpen(false);
+            const pending = pendingActionRef.current;
+            pendingActionRef.current = null;
+            if (typeof pending === 'function') {
+                // Defer so any closing modal animations / state settle first.
+                setTimeout(() => pending(), 0);
+            }
             return r.data;
         }), []);
 
@@ -46,12 +54,19 @@ export function UserAuthProvider({ children }) {
     }, []);
 
     const openLogin = useCallback(() => { setSignupOpen(false); setLoginOpen(true); }, []);
-    const closeLogin = useCallback(() => setLoginOpen(false), []);
+    const closeLogin = useCallback(() => {
+        pendingActionRef.current = null;
+        setLoginOpen(false);
+    }, []);
     const openSignup = useCallback(() => { setLoginOpen(false); setSignupOpen(true); }, []);
-    const closeSignup = useCallback(() => setSignupOpen(false), []);
+    const closeSignup = useCallback(() => {
+        pendingActionRef.current = null;
+        setSignupOpen(false);
+    }, []);
 
     const requireAuth = useCallback((onSuccess) => {
         if (user) { onSuccess?.(); return true; }
+        pendingActionRef.current = typeof onSuccess === 'function' ? onSuccess : null;
         setLoginOpen(true);
         return false;
     }, [user]);

@@ -97,13 +97,13 @@ export default function Navbar() {
                     <div className="account-wrap" ref={accountRef}>
                         <button
                             className="icon-btn account-btn"
-                            title={user ? `${user.name || 'Account'} (${user.email})` : 'Login / Signup'}
+                            title={user ? `${user.name || 'Account'} (+91 ${user.phone})` : 'Login / Signup'}
                             onClick={() => setAccountOpen((v) => !v)}
                             type="button"
                         >
                             {user ? (
                                 <span className="account-avatar" aria-hidden="true">
-                                    {(user.name || user.email || '?').trim().charAt(0).toUpperCase()}
+                                    {(user.name || user.phone || '?').trim().charAt(0).toUpperCase()}
                                 </span>
                             ) : (
                                 <img src={loginIcon} alt="Account" className="icon-img" />
@@ -112,7 +112,7 @@ export default function Navbar() {
                         {user && accountOpen && (
                             <div className="account-menu" onClick={(e) => e.stopPropagation()}>
                                 {user.name && <div className="account-name">{user.name}</div>}
-                                <div className="account-phone">{user.email}</div>
+                                <div className="account-phone">+91 {user.phone}</div>
                                 <Link to="/orders" onClick={() => setAccountOpen(false)} className="account-link">
                                     My Orders
                                 </Link>

@@ -7,9 +7,23 @@ export default function Testimonials() {
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(true);
-    const perPage = 2;
+    const [perPage, setPerPage] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches ? 1 : 2
+    );
     const totalPages = Math.max(1, Math.ceil(items.length / perPage));
     const timer = useRef(null);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 768px)');
+        const handler = (e) => {
+            setPerPage(e.matches ? 1 : 2);
+            setPage(0);
+        };
+        mq.addEventListener ? mq.addEventListener('change', handler) : mq.addListener(handler);
+        return () => {
+            mq.removeEventListener ? mq.removeEventListener('change', handler) : mq.removeListener(handler);
+        };
+    }, []);
 
     useEffect(() => {
         api.get('/testimonials')

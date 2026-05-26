@@ -107,8 +107,7 @@ export default function MyOrders() {
                                         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
                                             Subtotal: ₹{o.subtotal}<br />
                                             Shipping: {o.shipping === 0 ? 'FREE' : `₹${o.shipping}`}<br />
-                                            <strong>Total: ₹{o.total}</strong><br />
-                                            UPI Ref: {o.paymentRef || '—'}
+                                            <strong>Total: ₹{o.total}</strong>
                                         </p>
                                     </div>
                                 </div>

@@ -6,7 +6,6 @@ export default function SignupModal() {
     const { signupOpen, closeSignup, openLogin, sendOtp, verifyOtp } = useUserAuth();
     const [step, setStep] = useState('form'); // 'form' | 'otp'
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
     const [loading, setLoading] = useState(false);
@@ -18,7 +17,6 @@ export default function SignupModal() {
         if (signupOpen) {
             setStep('form');
             setName('');
-            setEmail('');
             setPhone('');
             setOtp('');
             setError('');
@@ -37,21 +35,16 @@ export default function SignupModal() {
         e.preventDefault();
         const trimmedName = name.trim();
         if (trimmedName.length < 2) { setError('Please enter your name'); return; }
-        const cleanEmail = email.trim().toLowerCase();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-            setError('Enter a valid email address');
-            return;
-        }
         const phoneDigits = phone.replace(/\D/g, '');
-        if (phoneDigits.length !== 10) {
+        if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
             setError('Enter a valid 10-digit mobile number');
             return;
         }
         setLoading(true);
         setError('');
         try {
-            const r = await sendOtp(cleanEmail, 'signup');
-            setInfo(r.devOtp ? `OTP sent. (Dev OTP: ${r.devOtp})` : 'OTP sent to your email. Check inbox & spam.');
+            const r = await sendOtp(phoneDigits, 'signup');
+            setInfo(r.devOtp ? `OTP sent. (Dev OTP: ${r.devOtp})` : 'OTP sent to your mobile number.');
             setStep('otp');
             setTimeout(() => inputRef.current?.focus(), 50);
         } catch (err) {
@@ -67,10 +60,9 @@ export default function SignupModal() {
         setLoading(true);
         setError('');
         try {
-            await verifyOtp(email.trim().toLowerCase(), otp, {
+            await verifyOtp(phone.replace(/\D/g, ''), otp, {
                 mode: 'signup',
                 name: name.trim(),
-                phone: phone.replace(/\D/g, ''),
             });
             closeSignup();
         } catch (err) {
@@ -102,15 +94,6 @@ export default function SignupModal() {
                             onChange={(e) => setName(e.target.value)}
                             className="login-name"
                         />
-                        <input
-                            type="email"
-                            placeholder="Email Address*"
-                            value={email}
-                            maxLength={120}
-                            autoComplete="email"
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="login-name"
-                        />
                         <div className="login-phone">
                             <span className="login-cc">🇮🇳 +91</span>
                             <input
@@ -119,6 +102,7 @@ export default function SignupModal() {
                                 placeholder="Mobile Number*"
                                 value={phone}
                                 maxLength={10}
+                                autoComplete="tel"
                                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                             />
                         </div>

@@ -30,6 +30,18 @@ export function CartProvider({ children }) {
         }
     });
 
+    const [coupon, setCoupon] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('cart_coupon') || 'null'); }
+        catch { return null; }
+    });
+
+    useEffect(() => {
+        try {
+            if (coupon) localStorage.setItem('cart_coupon', JSON.stringify(coupon));
+            else localStorage.removeItem('cart_coupon');
+        } catch { /* ignore */ }
+    }, [coupon]);
+
     useEffect(() => {
         try {
             localStorage.setItem('cart', JSON.stringify(items));
@@ -82,6 +94,7 @@ export function CartProvider({ children }) {
     const clearCart = () => {
         setItems([]);
         setWithBox(false);
+        setCoupon(null);
     };
 
     const count = items.reduce((s, i) => s + i.qty, 0);
@@ -89,9 +102,26 @@ export function CartProvider({ children }) {
     const BOX_FEE = 500;
     const boxFee = withBox ? BOX_FEE * count : 0;
 
+    // Recompute discount from current subtotal+boxFee so it stays consistent
+    // when the cart changes after the coupon was applied.
+    const discountBase = subtotal + boxFee;
+    const rawDiscount = coupon ? Math.round((discountBase * (coupon.percent || 0)) / 100) : 0;
+    const cappedDiscount = coupon && coupon.maxDiscount > 0
+        ? Math.min(rawDiscount, coupon.maxDiscount)
+        : rawDiscount;
+    const discount = Math.min(cappedDiscount, discountBase);
+
+    const applyCoupon = (c) => setCoupon(c);
+    const removeCoupon = () => setCoupon(null);
+
     return (
         <CartContext.Provider
-            value={{ items, addToCart, removeFromCart, updateQty, clearCart, count, subtotal, withBox, setWithBox, boxFee, BOX_FEE }}
+            value={{
+                items, addToCart, removeFromCart, updateQty, clearCart,
+                count, subtotal,
+                withBox, setWithBox, boxFee, BOX_FEE,
+                coupon, applyCoupon, removeCoupon, discount,
+            }}
         >
             {children}
         </CartContext.Provider>

@@ -7,6 +7,7 @@ const empty = {
     price: 0, mrp: 0, rating: 4.5, reviews: 0,
     category: 'unisex', tag: '', stock: 25,
     trending: false, newArrival: false,
+    colorVariants: [],
 };
 
 export default function AdminProducts() {
@@ -26,7 +27,45 @@ export default function AdminProducts() {
     useEffect(() => { load(); }, []);
 
     const startNew = () => { setEditing('new'); setForm(empty); };
-    const startEdit = (p) => { setEditing(p._id); setForm({ ...empty, ...p, images: Array.isArray(p.images) ? p.images : [], highlights: Array.isArray(p.highlights) ? p.highlights : [] }); };
+    const startEdit = (p) => {
+        setEditing(p._id);
+        setForm({
+            ...empty,
+            ...p,
+            images: Array.isArray(p.images) ? p.images : [],
+            highlights: Array.isArray(p.highlights) ? p.highlights : [],
+            colorVariants: Array.isArray(p.colorVariants) ? p.colorVariants : [],
+        });
+    };
+    // Color Variant Handlers
+    const addColorVariant = () => {
+        setForm((f) => ({
+            ...f,
+            colorVariants: [
+                ...(f.colorVariants || []),
+                { name: '', colorCode: '#FFD600', image: '' },
+            ],
+        }));
+    };
+    const updateColorVariant = (idx, key, value) => {
+        setForm((f) => ({
+            ...f,
+            colorVariants: f.colorVariants.map((v, i) => i === idx ? { ...v, [key]: value } : v),
+        }));
+    };
+    const removeColorVariant = (idx) => {
+        setForm((f) => ({
+            ...f,
+            colorVariants: f.colorVariants.filter((_, i) => i !== idx),
+        }));
+    };
+    const onColorImage = (idx, e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => updateColorVariant(idx, 'image', reader.result);
+        reader.readAsDataURL(file);
+    };
     const cancel = () => { setEditing(null); setForm(empty); };
 
     const save = async (e) => {
@@ -132,6 +171,41 @@ export default function AdminProducts() {
                         <div>
                             <label>Stock</label>
                             <input type="number" value={form.stock} onChange={(e) => onChange('stock', +e.target.value)} />
+                        </div>
+                        <div className="span-2">
+                            <label>Color Variants (for color slider)</label>
+                            <div style={{ marginBottom: 8 }}>
+                                <button type="button" className="btn-secondary" onClick={addColorVariant}>+ Add Color Variant</button>
+                            </div>
+                            {(form.colorVariants || []).length > 0 && (
+                                <div className="color-variants-list">
+                                    {form.colorVariants.map((v, idx) => (
+                                        <div key={idx} className="color-variant-row">
+                                            <input
+                                                style={{ width: 120 }}
+                                                placeholder="Color name"
+                                                value={v.name}
+                                                onChange={e => updateColorVariant(idx, 'name', e.target.value)}
+                                            />
+                                            <input
+                                                type="color"
+                                                value={v.colorCode || '#FFD600'}
+                                                onChange={e => updateColorVariant(idx, 'colorCode', e.target.value)}
+                                                title="Pick color"
+                                                style={{ width: 40, height: 32, border: 'none', background: 'none', marginLeft: 8 }}
+                                            />
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => onColorImage(idx, e)}
+                                                style={{ marginLeft: 8 }}
+                                            />
+                                            {v.image && <img src={v.image} alt="color preview" style={{ width: 40, height: 40, objectFit: 'cover', marginLeft: 8, borderRadius: 4, border: '1px solid #ccc' }} />}
+                                            <button type="button" className="btn-danger" style={{ marginLeft: 8 }} onClick={() => removeColorVariant(idx)}>×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="span-2">
                             <label>Description</label>

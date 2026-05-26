@@ -1,4 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar.jsx';
 import PromoBar from './components/PromoBar.jsx';
 import Footer from './components/Footer.jsx';
@@ -25,6 +27,8 @@ import AdminTestimonials from './admin/AdminTestimonials.jsx';
 import AdminPromoMessages from './admin/AdminPromoMessages.jsx';
 import AdminMediaLogos from './admin/AdminMediaLogos.jsx';
 import AdminFaqs from './admin/AdminFaqs.jsx';
+import AdminCoupons from './admin/AdminCoupons.jsx';
+import AdminSettings from './admin/AdminSettings.jsx';
 import AdminPages from './admin/AdminPages.jsx';
 import AdminOrders from './admin/AdminOrders.jsx';
 
@@ -35,6 +39,7 @@ export default function App() {
     return (
         <AdminAuthProvider>
             <ScrollToTop />
+            <ToastContainer position="top-right" autoClose={2000} hideProgressBar newestOnTop closeOnClick pauseOnHover={false} theme="light" />
             {!isAdmin && <PromoBar />}
             {!isAdmin && <Navbar />}
             <Routes>
@@ -59,6 +64,8 @@ export default function App() {
                     <Route path="promo-messages" element={<AdminPromoMessages />} />
                     <Route path="media-logos" element={<AdminMediaLogos />} />
                     <Route path="faqs" element={<AdminFaqs />} />
+                    <Route path="coupons" element={<AdminCoupons />} />
+                    <Route path="settings" element={<AdminSettings />} />
                     <Route path="pages" element={<AdminPages />} />
                     <Route path="orders" element={<AdminOrders />} />
                 </Route>

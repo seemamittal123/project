@@ -4,8 +4,8 @@ import logo from '../images/logo.png';
 
 export default function LoginModal() {
     const { loginOpen, closeLogin, openSignup, sendOtp, verifyOtp } = useUserAuth();
-    const [step, setStep] = useState('email'); // 'email' | 'otp'
-    const [email, setEmail] = useState('');
+    const [step, setStep] = useState('phone'); // 'phone' | 'otp'
+    const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -14,8 +14,8 @@ export default function LoginModal() {
 
     useEffect(() => {
         if (loginOpen) {
-            setStep('email');
-            setEmail('');
+            setStep('phone');
+            setPhone('');
             setOtp('');
             setError('');
             setInfo('');
@@ -29,18 +29,18 @@ export default function LoginModal() {
 
     if (!loginOpen) return null;
 
-    const submitEmail = async (e) => {
+    const submitPhone = async (e) => {
         e.preventDefault();
-        const cleanEmail = email.trim().toLowerCase();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-            setError('Enter a valid email address');
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+            setError('Enter a valid 10-digit mobile number');
             return;
         }
         setLoading(true);
         setError('');
         try {
-            const r = await sendOtp(cleanEmail, 'login');
-            setInfo(r.devOtp ? `OTP sent. (Dev OTP: ${r.devOtp})` : 'OTP sent to your email. Check inbox & spam.');
+            const r = await sendOtp(phoneDigits, 'login');
+            setInfo(r.devOtp ? `OTP sent. (Dev OTP: ${r.devOtp})` : 'OTP sent to your mobile number.');
             setStep('otp');
             setTimeout(() => inputRef.current?.focus(), 50);
         } catch (err) {
@@ -56,7 +56,7 @@ export default function LoginModal() {
         setLoading(true);
         setError('');
         try {
-            await verifyOtp(email.trim().toLowerCase(), otp, { mode: 'login' });
+            await verifyOtp(phone.replace(/\D/g, ''), otp, { mode: 'login' });
             closeLogin();
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid OTP');
@@ -73,21 +73,24 @@ export default function LoginModal() {
                 <img src={logo} alt="Genzdial" className="login-logo" />
                 <h3 className="login-title">Login</h3>
                 <p className="login-sub">
-                    Enter your registered email to receive an OTP.
+                    Enter your registered mobile number to receive an OTP.
                 </p>
 
-                {step === 'email' && (
-                    <form onSubmit={submitEmail} className="login-form">
-                        <input
-                            ref={inputRef}
-                            type="email"
-                            placeholder="Email Address*"
-                            value={email}
-                            maxLength={120}
-                            autoComplete="email"
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="login-name"
-                        />
+                {step === 'phone' && (
+                    <form onSubmit={submitPhone} className="login-form">
+                        <div className="login-phone">
+                            <span className="login-cc">🇮🇳 +91</span>
+                            <input
+                                ref={inputRef}
+                                type="tel"
+                                inputMode="numeric"
+                                placeholder="Mobile Number*"
+                                value={phone}
+                                maxLength={10}
+                                autoComplete="tel"
+                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                            />
+                        </div>
                         {error && <div className="login-error">{error}</div>}
                         <button type="submit" className="login-btn" disabled={loading}>
                             {loading ? 'Sending…' : 'GET OTP'}
@@ -121,9 +124,9 @@ export default function LoginModal() {
                         <button
                             type="button"
                             className="login-link"
-                            onClick={() => { setStep('email'); setError(''); setInfo(''); }}
+                            onClick={() => { setStep('phone'); setError(''); setInfo(''); }}
                         >
-                            Change email
+                            Change mobile number
                         </button>
                     </form>
                 )}
